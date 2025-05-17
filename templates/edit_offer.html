@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Modifier l'offre - JobFinder{% endblock %}
+
+{% block content %}
+<div class="container offer-form-container">
+    <h1 class="page-title">Modifier l'offre</h1>
+    
+    <div class="card">
+        <form method="post" class="offer-form">
+            <div class="form-group">
+                <label for="company_name">Entreprise</label>
+                <input type="text" id="company_name" name="company_name" class="form-control" value="{{ offer.company_name }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="title">Titre du poste</label>
+                <input type="text" id="title" name="title" class="form-control" value="{{ offer.title }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea id="description" name="description" class="form-control" rows="5" required>{{ offer.description }}</textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="skills">Compétences requises</label>
+                <textarea id="skills" name="skills" class="form-control" rows="3" required>{{ offer.skills }}</textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="experience">Années d'expérience requises</label>
+                <input type="number" id="experience" name="experience" class="form-control" value="{{ offer.experience }}" min="0" required>
+            </div>
+
+            <div class="form-group">
+                <label for="education">Niveau d'éducation requis</label>
+                <select id="education" name="education" class="form-control" required>
+                    <option value="aucun" {% if offer.education == 'aucun' %}selected{% endif %}>Aucun</option>
+                    <option value="bac" {% if offer.education == 'bac' %}selected{% endif %}>Bac</option>
+                    <option value="licence" {% if offer.education == 'licence' %}selected{% endif %}>Licence</option>
+                    <option value="master" {% if offer.education == 'master' %}selected{% endif %}>Master</option>
+                    <option value="doctorat" {% if offer.education == 'doctorat' %}selected{% endif %}>Doctorat</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="languages">Langues requises (séparées par des virgules)</label>
+                <input type="text" id="languages" name="languages" class="form-control" value="{{ offer.languages }}">
+            </div>
+
+            <div class="form-group">
+                <label for="location">Localisation</label>
+                <input type="text" id="location" name="location" class="form-control" value="{{ offer.location }}">
+            </div>
+
+            <div class="form-group">
+                <label for="salary">Salaire</label>
+                <input type="text" id="salary" name="salary" class="form-control" value="{{ offer.salary }}">
+            </div>
+
+            <div class="form-group">
+                <label for="contract_type">Type de contrat</label>
+                <select id="contract_type" name="contract_type" class="form-control">
+                    <option value="CDI" {% if offer.contract_type == 'CDI' %}selected{% endif %}>CDI</option>
+                    <option value="CDD" {% if offer.contract_type == 'CDD' %}selected{% endif %}>CDD</option>
+                    <option value="Stage" {% if offer.contract_type == 'Stage' %}selected{% endif %}>Stage</option>
+                    <option value="Alternance" {% if offer.contract_type == 'Alternance' %}selected{% endif %}>Alternance</option>
+                    <option value="Freelance" {% if offer.contract_type == 'Freelance' %}selected{% endif %}>Freelance</option>
+                </select>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Mettre à jour</button>
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">Annuler</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

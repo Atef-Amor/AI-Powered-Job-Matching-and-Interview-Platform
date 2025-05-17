@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+
+{% block title %}Entretien - {{ offer.title }}{% endblock %}
+
+{% block content %}
+<div class="interview-container">
+        <!-- Ajout du bouton de retour -->
+    <div class="container">
+        <a href="{{ url_for('candidat_dashboard') }}" class="back-button">
+            <i class="fas fa-arrow-left"></i>
+            Retour au Dashboard Candidat
+        </a>
+    </div>
+    <div class="interview-header">
+        <h1>Entretien pour le poste: {{ offer.title }}</h1>
+        <h3>{{ offer.company_name }}</h3>
+    </div>
+
+    <div class="skills-section">
+        <p><strong>Compétences évaluées:</strong> {{ skills|join(', ') }}</p>
+    </div>
+
+    <div id="interview-area">
+        <button id="start-interview" class="btn btn-primary">Commencer l'entretien</button>
+    </div>
+
+    <div class="feedback-section" style="display: none;">
+        <h3>Résultats de l'entretien</h3>
+        <div id="feedback-content"></div>
+        <button onclick="window.location.href='{{ url_for('candidat_dashboard') }}'" class="btn btn-primary">
+            Retour au tableau de bord
+        </button>
+    </div>
+</div>
+
+<script>
+let currentQuestionIndex = 0;
+let questions = [];
+let answers = [];
+
+// Start interview when button is clicked
+document.getElementById('start-interview').addEventListener('click', function() {
+    initializeInterview();
+});
+
+function initializeInterview() {
+    // Make POST request to get questions
+    fetch('{{ url_for("chatbot_interview", offer_id=offer.id) }}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            alert('Erreur: ' + data.error);
+            return;
+        }
+        questions = data.questions;
+        showQuestion(0);
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Une erreur est survenue lors du chargement des questions.');
+    });
+}
+
+function showQuestion(index) {
+    if (index >= questions.length) {
+        evaluateInterview();
+        return;
+    }
+
+    const interviewArea = document.getElementById('interview-area');
+    interviewArea.innerHTML = `
+        <div class="question-card">
+            <h4>Question ${index + 1}/${questions.length}</h4>
+            <p class="skill-tag">${questions[index].required ? 'Compétence requise' : 'Compétence additionnelle'}: ${questions[index].skill}</p>
+            <p class="question-text">${questions[index].question}</p>
+            <textarea id="answer" rows="4" class="form-control" placeholder="Votre réponse..."></textarea>
+            <button onclick="submitAnswer()" class="btn btn-primary mt-3">
+                ${index === questions.length - 1 ? 'Terminer' : 'Question suivante'}
+            </button>
+        </div>
+    `;
+}
+
+function submitAnswer() {
+    const answer = document.getElementById('answer').value.trim();
+    if (!answer) {
+        alert('Veuillez répondre à la question avant de continuer.');
+        return;
+    }
+
+    answers.push({
+        question: questions[currentQuestionIndex].question,
+        skill: questions[currentQuestionIndex].skill,
+        required: questions[currentQuestionIndex].required,
+        answer: answer
+    });
+
+    currentQuestionIndex++;
+    if (currentQuestionIndex < questions.length) {
+        showQuestion(currentQuestionIndex);
+    } else {
+        evaluateInterview();
+    }
+}
+
+function evaluateInterview() {
+    fetch('/evaluate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(answers)
+    })
+    .then(response => response.json())
+    .then(results => {
+        // Calculate simple mean score from all questions
+        const totalScore = results.reduce((sum, r) => sum + r.score, 0) / results.length;
+
+        // Concatenate all feedbacks with question context
+        const detailedFeedback = results.map((r, i) => 
+            `Question: ${answers[i].question}\nCompétence: ${answers[i].skill}\nRéponse: ${answers[i].answer}\nScore: ${r.score}/10\nFeedback: ${r.feedback}`
+        ).join('\n\n');
+
+        // Save results
+        fetch('/save_interview_result/{{ offer.id }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                score: Math.round(totalScore),
+                feedback: detailedFeedback
+            })
+        });
+
+        // Show feedback
+        document.getElementById('interview-area').style.display = 'none';
+        const feedbackSection = document.querySelector('.feedback-section');
+        feedbackSection.style.display = 'block';
+        
+        const feedbackContent = document.getElementById('feedback-content');
+        feedbackContent.innerHTML = `
+            <div class="final-score">
+                <h4>Score Final: ${Math.round(totalScore)}/10</h4>
+            </div>
+            <div class="detailed-feedback">
+                ${results.map((r, i) => `
+                    <div class="feedback-item">
+                        <p><strong>Compétence:</strong> ${answers[i].skill}</p>
+                        <p><strong>Question:</strong> ${answers[i].question}</p>
+                        <p><strong>Votre réponse:</strong> ${answers[i].answer}</p>
+                        <p><strong>Score:</strong> ${r.score}/10</p>
+                        <p><strong>Feedback:</strong> ${r.feedback}</p>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    })
+    .catch(error => console.error('Error:', error));
+}
+</script>
+
+<style>
+.interview-container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.interview-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.skills-section {
+    background: var(--background-light);
+    padding: 1rem;
+    border-radius: var(--border-radius);
+    margin-bottom: 2rem;
+}
+
+.question-card {
+    background: var(--background-light);
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+    margin-bottom: 1.5rem;
+}
+
+.question-text {
+    font-size: 1.1rem;
+    margin: 1rem 0;
+}
+
+.skill-tag {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    background: var(--primary-color);
+    color: white;
+    border-radius: 1rem;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+textarea.form-control {
+    width: 100%;
+    background: var(--background-dark);
+    color: var(--text-light);
+    border: 1px solid var(--text-gray);
+    padding: 0.75rem;
+    margin: 1rem 0;
+    border-radius: var(--border-radius);
+}
+
+.feedback-section {
+    background: var(--background-light);
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+}
+
+.final-score {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.feedback-item {
+    background: var(--background-dark);
+    padding: 1rem;
+    border-radius: var(--border-radius);
+    margin-bottom: 1rem;
+}
+
+.mt-3 {
+    margin-top: 1rem;
+}
+</style>
+{% endblock %}

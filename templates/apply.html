@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% block title %}Postuler - JobFinder{% endblock %}
+
+{% block content %}
+<div class="application-container">
+    <!-- Bouton de retour -->
+    <a href="{{ url_for('candidat_dashboard') }}" class="back-button">
+        <i class="fas fa-arrow-left"></i>
+        Retour au Dashboard
+    </a>
+
+    <div class="application-card">
+        <h1 class="page-title">Postuler à l'offre</h1>
+        
+        <div class="upload-section">
+            <form method="POST" action="{{ url_for('apply', offer_id=offer_id) }}" enctype="multipart/form-data" class="application-form">
+                <div class="form-group">
+                    <div class="file-upload-wrapper">
+                        <div class="upload-icon">
+                            <i class="fas fa-file-upload"></i>
+                        </div>
+                        <h3>Déposez votre CV ici</h3>
+                        <p class="upload-info">Format accepté: PDF uniquement</p>
+                        <input type="file" id="cv" name="cv" accept=".pdf" required 
+                               class="file-input" onchange="updateFileName(this)">
+                        <p id="selected-file" class="selected-file"></p>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i>
+                        Envoyer ma candidature
+                    </button>
+                    <a href="{{ url_for('candidat_dashboard') }}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i>
+                        Annuler
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.application-container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.application-card {
+    background: var(--background-light);
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.upload-section {
+    margin-top: 2rem;
+}
+
+.file-upload-wrapper {
+    border: 2px dashed var(--primary-color);
+    border-radius: var(--border-radius);
+    padding: 3rem 2rem;
+    text-align: center;
+    position: relative;
+    transition: all 0.3s ease;
+    background: var(--background-dark);
+    cursor: pointer;
+}
+
+.file-upload-wrapper:hover {
+    border-color: var(--primary-light);
+    transform: translateY(-2px);
+}
+
+.upload-icon {
+    font-size: 3rem;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.file-upload-wrapper h3 {
+    color: var(--text-light);
+    margin-bottom: 0.5rem;
+    font-size: 1.5rem;
+}
+
+.upload-info {
+    color: var(--text-gray);
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+.file-input {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.selected-file {
+    color: var(--primary-color);
+    margin-top: 1rem;
+    font-weight: 500;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+    justify-content: center;
+}
+
+.form-actions .btn {
+    padding: 0.75rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 500;
+}
+
+@media (max-width: 576px) {
+    .form-actions {
+        flex-direction: column;
+    }
+
+    .form-actions .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+</style>
+
+<script>
+function updateFileName(input) {
+    const fileName = input.files[0]?.name;
+    const fileInfo = document.getElementById('selected-file');
+    if (fileName) {
+        fileInfo.textContent = `Fichier sélectionné: ${fileName}`;
+    } else {
+        fileInfo.textContent = '';
+    }
+}
+
+// Drag and drop support
+const dropZone = document.querySelector('.file-upload-wrapper');
+
+['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+    dropZone.addEventListener(eventName, preventDefaults, false);
+});
+
+function preventDefaults(e) {
+    e.preventDefault();
+    e.stopPropagation();
+}
+
+['dragenter', 'dragover'].forEach(eventName => {
+    dropZone.addEventListener(eventName, highlight, false);
+});
+
+['dragleave', 'drop'].forEach(eventName => {
+    dropZone.addEventListener(eventName, unhighlight, false);
+});
+
+function highlight(e) {
+    dropZone.classList.add('highlight');
+}
+
+function unhighlight(e) {
+    dropZone.classList.remove('highlight');
+}
+
+dropZone.addEventListener('drop', handleDrop, false);
+
+function handleDrop(e) {
+    const dt = e.dataTransfer;
+    const files = dt.files;
+    const fileInput = document.querySelector('.file-input');
+    
+    fileInput.files = files;
+    updateFileName(fileInput);
+}
+</script>
+{% endblock %}

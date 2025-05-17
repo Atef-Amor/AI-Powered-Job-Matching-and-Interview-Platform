@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}JobFinder - Plateforme de Recrutement{% endblock %}
+
+{% block content %}
+<div class="hero">
+    <div class="container">
+        <!-- Section d'introduction -->
+        <div class="intro-section">
+            <h1 class="hero-title">Bienvenue sur JobFinder</h1>
+            <p class="hero-subtitle">La plateforme intelligente qui révolutionne le recrutement</p>
+            
+            <div class="intro-highlights">
+                <div class="highlight-item">
+                    <i class="fas fa-robot"></i>
+                    <h3>Entretiens IA</h3>
+                    <p>Évaluez vos compétences avec notre chatbot intelligent</p>
+                </div>
+                <div class="highlight-item">
+                    <i class="fas fa-chart-line"></i>
+                    <h3>Score CV automatisé</h3>
+                    <p>Obtenez une évaluation instantanée de votre profil</p>
+                </div>
+                <div class="highlight-item">
+                    <i class="fas fa-search"></i>
+                    <h3>Matching intelligent</h3>
+                    <p>Trouvez les offres qui correspondent à vos compétences</p>
+                </div>
+            </div>
+
+            {% if not session.user_id %}
+            <div class="cta-buttons">
+                <a href="{{ url_for('register') }}" class="btn btn-primary">
+                    <i class="fas fa-user-plus"></i>
+                    Créer un compte
+                </a>
+                <a href="{{ url_for('login') }}" class="btn btn-secondary">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Se connecter
+                </a>
+            </div>
+            {% endif %}
+        </div>
+
+        {% if session.user_id %}
+            {% if session.role == 'admin' %}
+                <div class="dashboard-redirect">
+                    <a href="{{ url_for('admin_dashboard') }}" class="btn dashboard-button">
+                        <i class="fas fa-tachometer-alt"></i>
+                        Accéder au Dashboard Admin
+                    </a>
+                </div>
+            {% elif session.role == 'candidat' %}
+                <div class="dashboard-redirect">
+                    <a href="{{ url_for('candidat_dashboard') }}" class="btn dashboard-button">
+                        <i class="fas fa-user"></i>
+                        Accéder à Mon Espace Candidat
+                    </a>
+                </div>
+            {% endif %}
+        {% endif %}
+    </div>
+</div>
+
+<section class="features">
+    <div class="container">
+        <h2 class="section-title">Pourquoi choisir JobFinder ?</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3>Offres variées</h3>
+                <p>Accédez à des centaines d'offres dans divers secteurs d'activité.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h3>Process rapide</h3>
+                <p>Postulez en quelques clics et recevez des réponses rapidement.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔒</div>
+                <h3>Sécurisé</h3>
+                <p>Vos données sont protégées et votre vie privée respectée.</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

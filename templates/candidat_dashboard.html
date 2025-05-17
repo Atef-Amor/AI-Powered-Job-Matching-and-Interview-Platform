@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+
+{% block title %}Tableau de bord Candidat{% endblock %}
+
+{% block content %}
+<div class="dashboard-candidate">
+    <div class="container">
+        <div class="dashboard-header">
+            <h1 class="welcome-message">Bienvenue {{ session.get('prenom', 'Candidat') }}</h1>
+        </div>
+
+        <h2 class="section-title">Offres d'emploi disponibles</h2>
+        
+        <div class="job-offers-container">
+            {% for offer in offers %}
+            <div class="job-card">
+                <h3 class="job-title">{{ offer['title'] }}</h3>
+                
+                <div class="company-info">
+                    <span class="company-name">{{ offer['company_name'] }}</span>
+                </div>
+                
+                <p class="job-description">{{ offer['description'] }}</p>
+
+                <p><strong>Compétences:</strong> {{ offer.skills }}</p>
+                <p><strong>Années d'expérience requises:</strong> {{ offer.experience }}</p>
+                <p><strong>Niveau d'éducation requis:</strong> {{ offer.education }}</p>
+                <p><strong>Langues requises:</strong> {{ offer.languages }}</p>
+                
+                <div class="application-status">
+                    {% if offer.id in application_statuses %}
+                        {% set status = application_statuses[offer.id] %}
+                        <div class="status-badge {{ status }}">
+                            {% if status == 'pending' %}
+                                <i class="fas fa-clock"></i>
+                                <span>Candidature en cours d'évaluation</span>
+                            {% elif status == 'chatbot-interview' %}
+                                <i class="fas fa-comments"></i>
+                                <span>Entretien disponible</span>
+                            {% elif status == 'completed' %}
+                                <i class="fas fa-check-circle"></i>
+                                <span>Entretien complété</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="score-display">
+                            {% if offer.id in offer_scores %}
+                                <div class="score-item">
+                                    <i class="fas fa-file-alt"></i>
+                                    <span class="score-label">Score CV:</span>
+                                    <span class="score-value">{{ "%.1f"|format(offer_scores[offer.id]) }}/10</span>
+                                </div>
+                            {% endif %}
+
+                            {% if offer.id in chatbot_scores %}
+                                <div class="score-item">
+                                    <i class="fas fa-robot"></i>
+                                    <span class="score-label">Score Entretien:</span>
+                                    <span class="score-value">{{ chatbot_scores[offer.id] }}/10</span>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        {% if status == 'chatbot-interview' %}
+                            <a href="{{ url_for('start_interview', offer_id=offer.id) }}" 
+                               class="interview-button">
+                                <i class="fas fa-comments"></i>
+                                Commencer l'entretien
+                            </a>
+                        {% endif %}
+
+                        {% if offer.id in chatbot_feedback %}
+                            <div class="feedback-section">
+                                <h4>Feedback de l'entretien</h4>
+                                <button class="feedback-toggle" onclick="toggleFeedback(this)">
+                                    <span>Voir le feedback détaillé</span>
+                                    <i class="fas fa-chevron-down"></i>  
+                                </button>
+                                <div class="feedback-content">
+                                    {{ chatbot_feedback[offer.id]|nl2br }}
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="card-footer">
+                            <a href="{{ url_for('apply', offer_id=offer.id) }}" 
+                               class="btn btn-primary apply-btn">
+                                Postuler maintenant
+                                <i class="fas fa-paper-plane"></i>
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<script>
+    function toggleFeedback(button) {
+        const content = button.nextElementSibling;
+        const isHidden = content.style.display === 'none' || content.style.display === '';
+        
+        content.style.display = isHidden ? 'block' : 'none';
+        button.classList.toggle('active');
+        button.querySelector('span').textContent = isHidden ? 'Masquer le feedback' : 'Voir le feedback détaillé';
+    }
+    </script>
+{% endblock %}

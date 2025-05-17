@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}JobFinder{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    {% block css %}{% endblock %}
+</head>
+<body>
+    <header>
+        <div class="container">
+            <a href="{{ url_for('index') }}" class="logo">JobFinder</a>
+            <nav>
+                {% if 'user_id' in session %}
+                    <span class="user-email">{{ session.get('email', 'Utilisateur') }}</span>
+                    <a href="{{ url_for('logout') }}" class="btn btn-danger">Déconnexion</a>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="btn btn-primary">Connexion</a>
+                    <a href="{{ url_for('register') }}" class="btn btn-success">Inscription</a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="floating-notification {{ category }}">
+                <i class="fas {% if category == 'success' %}fa-check-circle{% elif category == 'error' %}fa-exclamation-circle{% else %}fa-info-circle{% endif %}"></i>
+                <div class="notification-content">
+                    {{ message }}
+                </div>
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>À propos</h3>
+                <p>JobFinder est votre plateforme de recrutement intelligente qui met en relation les talents avec les meilleures opportunités professionnelles.</p>
+            </div>
+            
+            <div class="footer-section">
+                <h3>Liens rapides</h3>
+                <ul class="footer-links">
+                    <li><a href="{{ url_for('index') }}"><i class="fas fa-home"></i> Accueil</a></li>
+                    {% if 'user_id' not in session %}
+                        <li><a href="{{ url_for('login') }}"><i class="fas fa-sign-in-alt"></i> Connexion</a></li>
+                        <li><a href="{{ url_for('register') }}"><i class="fas fa-user-plus"></i> Inscription</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h3>Contactez-nous</h3>
+                <ul class="footer-links">
+                    <li><i class="fas fa-envelope"></i> contact@jobfinder.com</li>
+                    <li><i class="fas fa-phone"></i> +216 71 000 000</li>
+                    <li><i class="fas fa-map-marker-alt"></i> Tunis, Tunisie</li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h3>Suivez-nous</h3>
+                <div class="footer-social">
+                    <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="social-icon"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            <p>&copy; {{ now.year if now else '2025' }} JobFinder. Tous droits réservés.</p>
+        </div>
+    </footer>
+
+    {% if 'user_id' in session %}
+    <script>
+    // Check for application status updates every 5 minutes
+    function checkApplicationStatuses() {
+        fetch('/update_application_statuses')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Reload page if we're on the dashboard to show updated statuses
+                    if (window.location.pathname.includes('dashboard')) {
+                        window.location.reload();
+                    }
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    // Run initial check and set up interval
+    checkApplicationStatuses();
+    setInterval(checkApplicationStatuses, 300000); // 5 minutes
+    </script>
+    <script>
+        // Fonction pour fermer les notifications
+        function closeNotification(element) {
+            element.style.animation = 'slideOutRight 0.3s ease-out forwards';
+            setTimeout(() => {
+                element.remove();
+            }, 300);
+        }
+        
+        // Auto-fermeture des notifications après 5 secondes
+        document.addEventListener('DOMContentLoaded', function() {
+            const notifications = document.querySelectorAll('.alert, .floating-notification');
+            notifications.forEach(notification => {
+                // Ajouter le bouton de fermeture
+                const closeButton = document.createElement('button');
+                closeButton.className = 'notification-close';
+                closeButton.innerHTML = '<i class="fas fa-times"></i>';
+                closeButton.onclick = function() {
+                    closeNotification(notification);
+                };
+                notification.appendChild(closeButton);
+        
+                // Auto-fermeture après 5 secondes
+                setTimeout(() => {
+                    if (notification.isConnected) {
+                        closeNotification(notification);
+                    }
+                }, 5000);
+            });
+        });
+        </script>
+    {% endif %}
+</body>
+</html>

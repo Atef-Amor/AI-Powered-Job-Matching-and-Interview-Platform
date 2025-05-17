@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="page-title">Dashboard Admin</h1>
+    
+    <a href="{{ url_for('create_offer') }}" class="btn btn-primary">
+        Ajouter une offre
+    </a>
+    
+    <div class="offers-list">
+        {% for offer in offers %}
+        <div class="offer-card">
+            <h3>{{ offer.title }}</h3>
+            <p class="offer-description">{{ offer.description }}</p>
+            <p><strong>Entreprise:</strong> {{ offer.company_name }}</p>
+            <p><strong>Compétences:</strong> {{ offer.skills }}</p>
+            <p><strong>Années d'expérience requises:</strong> {{ offer.experience }}</p>
+            <p><strong>Niveau d'éducation requis:</strong> {{ offer.education }}</p>
+            <p><strong>Langues requises:</strong> {{ offer.languages }}</p>
+            
+            <div class="applications-summary">
+                <h4>État des candidatures</h4>
+                <ul class="status-list">
+                    <li>
+                        <span class="status-label">Total:</span>
+                        <span class="status-count">{{ offer.application_counts.total }}</span>
+                    </li>
+                    <li>
+                        <span class="status-label">En attente:</span>
+                        <span class="status-count">{{ offer.application_counts.pending }}</span>
+                    </li>
+                    <li>
+                        <span class="status-label">Entretien:</span>
+                        <span class="status-count">{{ offer.application_counts.interview }}</span>
+                    </li>
+                    <li>
+                        <span class="status-label">Entretiens complétés:</span>
+                        <span class="status-count">{{ offer.application_counts.completed }}</span>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="offer-actions">
+                <a href="{{ url_for('edit_offer', id=offer.id) }}" class="btn btn-primary">
+                    Modifier
+                </a>
+                <a href="{{ url_for('view_applications_route', offer_id=offer.id) }}" class="btn btn-info">
+                    Voir les candidatures
+                </a>
+                <form action="{{ url_for('delete_offer', id=offer.id) }}" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette offre?')">
+                        Supprimer
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

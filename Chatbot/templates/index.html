@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Interview Evaluation</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="container">
+    <h1>Interview Evaluation</h1>
+
+    <!-- Skill Input -->
+    <div class="input-container">
+      <input type="text" id="skills" placeholder="Enter skills, e.g. Python, JavaScript" />
+      <button id="generate-questions-btn">Generate Questions</button>
+    </div>
+
+    <!-- Questions will be injected here -->
+    <div id="questions-container"></div>
+
+    <!-- Evaluate only appears after questions are generated -->
+    <button id="evaluate-btn" style="display: none;">Evaluate Answers</button>
+
+    <!-- Feedback will be shown here -->
+    <div id="feedback-container" class="feedback-container" style="display: none;"></div>
+  </div>
+
+  <script>
+    let questions = [];
+
+    // 1) Generate questions from skills
+    document.getElementById('generate-questions-btn')
+      .addEventListener('click', async () => {
+        const skillsInput = document.getElementById('skills').value.trim();
+        if (!skillsInput) return alert('Please enter at least one skill.');
+
+        const skills = skillsInput.split(',')
+                          .map(s => s.trim())
+                          .filter(Boolean);
+
+        // Fetch questions
+        const resp = await fetch('/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ skills })
+        });
+        const result = await resp.json();
+        if (result.error) return alert(result.error);
+
+        // Render questions
+        questions = result;  // [{ skill, question }, ...]
+        const qc = document.getElementById('questions-container');
+        qc.innerHTML = '';
+        questions.forEach((item, i) => {
+          const div = document.createElement('div');
+          div.className = 'question-container';
+          div.innerHTML = `
+            <p><strong>Q${i+1}:</strong> ${item.question}</p>
+            <textarea id="answer-${i}" placeholder="Your answer here"></textarea>
+          `;
+          qc.appendChild(div);
+        });
+
+        // Show evaluate button
+        document.getElementById('evaluate-btn').style.display = 'block';
+        document.getElementById('feedback-container').style.display = 'none';
+      });
+
+    // 2) Evaluate all answers
+    document.getElementById('evaluate-btn')
+      .addEventListener('click', async () => {
+        // Collect responses
+        const responses = questions.map((item, i) => ({
+          question: item.question,
+          answer: document.getElementById(`answer-${i}`).value.trim()
+        }));
+
+        // Send to backend
+        const resp = await fetch('/evaluate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(responses)
+        });
+        const results = await resp.json();
+        if (results.error) return alert(results.error);
+
+        // Render feedback
+        const fc = document.getElementById('feedback-container');
+        fc.style.display = 'block';
+        fc.innerHTML = results.map((r, i) => `
+          <div class="feedback-item">
+            <p><strong>Q${i+1}:</strong> ${r.question}</p>
+            <p><strong>Score:</strong> ${r.score}</p>
+            <p><strong>Feedback:</strong> ${r.feedback}</p>
+          </div>
+          <hr/>
+        `).join('');
+      });
+  </script>
+</body>
+</html>
